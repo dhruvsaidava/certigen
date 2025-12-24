@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificates Generated - Download Options</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .success-message {
+            text-align: center;
+            color: #28a745;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #d4edda;
+            border-radius: 8px;
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .info-box p {
+            margin: 8px 0;
+            color: #555;
+        }
+        
+        .download-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-full {
+            width: 100%;
+        }
+        
+        .certificate-list {
+            margin-top: 30px;
+        }
+        
+        .certificate-list h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .certificate-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Certificates Generated!</h1>
+        
+        <div class="success-message">
+            Successfully generated {{ info.files|length }} certificate{% if info.files|length != 1 %}s{% endif %}!
+        </div>
+        
+        <div class="info-box">
+            <p><strong>Session ID:</strong> {{ session_id }}</p>
+            <p><strong>Generated:</strong> {{ info.created }}</p>
+            <p><strong>PDF Files:</strong> 
+                {% if info.has_pdf %}
+                    {% if pdf_files|length > 0 %}
+                        ✅ Generated ({{ pdf_files|length }} files)
+                    {% else %}
+                        ⚠️ Requested but not found
+                    {% endif %}
+                {% else %}
+                    ❌ Not generated (checkbox was unchecked)
+                {% endif %}
+            </p>
+            {% if info.get('has_combined_pdf') %}
+            <p><strong>Combined PDF:</strong> ✅ Available (All certificates in one file)</p>
+            {% endif %}
+        </div>
+        
+        <div class="download-options">
+            <a href="/download?session={{ session_id }}&type=all" class="btn btn-primary btn-full">
+                📦 Download All (ZIP)
+            </a>
+            
+            <a href="/download?session={{ session_id }}&type=jpg" class="btn btn-success btn-full">
+                🖼️ Download JPG Only (ZIP)
+            </a>
+            
+            {% if info.has_pdf and pdf_files|length > 0 %}
+            <a href="/download?session={{ session_id }}&type=pdf" class="btn btn-info btn-full">
+                📄 Download PDF Only (ZIP)
+            </a>
+            {% else %}
+            <button class="btn btn-info btn-full" disabled title="PDF files were not generated">
+                📄 Download PDF Only (Not Available)
+            </button>
+            {% endif %}
+            
+            {% if info.get('has_combined_pdf') %}
+            <a href="/download-combined?session={{ session_id }}" class="btn btn-primary btn-full" style="background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);">
+                📚 Download Combined PDF (All in One)
+            </a>
+            {% else %}
+            <button class="btn btn-primary btn-full" disabled style="background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%); opacity: 0.5;" title="Combined PDF not available">
+                📚 Download Combined PDF (Not Available)
+            </button>
+            {% endif %}
+        </div>
+        
+        {% if info.files %}
+        <div class="certificate-list">
+            <h3>Generated Certificates:</h3>
+            {% for file in info.files %}
+            <div class="certificate-item">
+                <span>{{ file.name }}</span>
+                <span>
+                    <a href="/output/{{ session_id }}/jpg/{{ file.jpg }}" target="_blank" style="color: #28a745; text-decoration: none; margin-right: 10px;">🖼️ JPG</a>
+                    {% if file.get('pdf') %}
+                    <a href="/output/{{ session_id }}/pdf/{{ file.pdf }}" target="_blank" style="color: #17a2b8; text-decoration: none;">📄 PDF</a>
+                    {% endif %}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="back-link">
+            <a href="/">← Generate More Certificates</a>
+        </div>
+    </div>
+</body>
+</html>
+

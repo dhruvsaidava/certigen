@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Generator - Python</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input[type="file"],
+        select,
+        textarea,
+        input[type="number"],
+        input[type="color"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="file"]:focus,
+        select:focus,
+        textarea:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .preview-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+            border: 2px dashed #667eea;
+        }
+        
+        .preview-section.active {
+            display: block;
+        }
+        
+        .preview-section label {
+            display: block;
+            margin-bottom: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .preview-section canvas {
+            max-width: 100%;
+            width: auto;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: block;
+            margin: 0 auto;
+            background: #fff;
+        }
+        
+        .font-preview {
+            margin-top: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            font-size: 24px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Certificate Generator (Python)</h1>
+        
+        <form id="certificateForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="template">Upload Certificate Template (PNG - High Resolution)</label>
+                <input type="file" id="template" name="template" accept="image/png" required>
+                <div class="help-text">Upload a high-resolution PNG image that will serve as your certificate template</div>
+            </div>
+            
+            <div class="preview-section" id="previewSection">
+                <label>Certificate Preview with Name:</label>
+                <canvas id="templatePreview"></canvas>
+                <div class="help-text" style="margin-top: 10px; color: #666;">
+                    Preview shows how the first name will appear on the certificate<br>
+                    <small id="previewInfo" style="color: #888;"></small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="font">Select Font Style</label>
+                <select id="font" name="font" required>
+                    <option value="arial">Arial (Standard)</option>
+                    <option value="times">Times New Roman (Formal)</option>
+                    <option value="cursive">Cursive (Handwriting Style)</option>
+                    <option value="mongolia">Mongolia Script (Handwriting)</option>
+                    <option value="brush">Brush Script (Handwriting)</option>
+                    <option value="lucida">Lucida Handwriting</option>
+                    <option value="gujarati">Gujarati (ગુજરાતી)</option>
+                </select>
+                <div class="font-preview" id="fontPreview">Sample Text Preview</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="fontSize">Font Size</label>
+                <input type="number" id="fontSize" name="fontSize" value="48" min="10" max="120" required>
+                <div class="help-text">Font size in pixels (10-120)</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="yPosition">Name Y Position (from top)</label>
+                <input type="number" id="yPosition" name="yPosition" value="300" min="0" required>
+                <div class="help-text">
+                    Vertical position where the name will be placed (in pixels from top of image). 
+                    Names are automatically center-aligned horizontally.<br>
+                    <small style="color: #666;">💡 Tip: Use the preview below to adjust this value until the name appears in the right position.</small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="textColor">Text Color</label>
+                <input type="color" id="textColor" name="textColor" value="#000000">
+            </div>
+            
+            <div class="form-group">
+                <label for="names">Enter Names (one per line)</label>
+                <textarea id="names" name="names" placeholder="dhruv saidava&#10;DHRUV SAIDAVA&#10;john doe&#10;JANE SMITH" required></textarea>
+                <div class="help-text">Enter names, one per line. All names will be converted to proper case (First Letter Capital).</div>
+            </div>
+            
+            <div class="form-group">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" id="generatePDF" name="generatePDF" value="1" checked>
+                    <span>Generate PDF files (in addition to JPG)</span>
+                </label>
+                <div class="help-text">Uncheck if you only need JPG images. PDF generation requires img2pdf library.</div>
+            </div>
+            
+            <button type="submit" class="btn" id="generateBtn">Generate Certificates</button>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 15px; color: #666;">Generating certificates... This may take a moment.</p>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let templateImage = null;
+            
+            const templateInput = document.getElementById('template');
+            const templateCanvas = document.getElementById('templatePreview');
+            const previewSection = document.getElementById('previewSection');
+            const fontSelect = document.getElementById('font');
+            const fontSizeInput = document.getElementById('fontSize');
+            const yPositionInput = document.getElementById('yPosition');
+            const textColorInput = document.getElementById('textColor');
+            const namesTextarea = document.getElementById('names');
+            const fontPreview = document.getElementById('fontPreview');
+            
+            function toProperCase(name) {
+                return name.trim().toLowerCase().split(' ').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+            }
+            
+            function getPreviewName() {
+                const namesText = namesTextarea.value.trim();
+                if (namesText) {
+                    const firstLine = namesText.split('\n')[0].trim();
+                    return toProperCase(firstLine) || 'Sample Name';
+                }
+                return 'Sample Name';
+            }
+            
+            function getCanvasFontFamily(font) {
+                const fontMap = {
+                    'arial': 'Arial, sans-serif',
+                    'times': 'Times New Roman, serif',
+                    'cursive': 'cursive',
+                    'mongolia': 'Brush Script MT, Lucida Handwriting, cursive',
+                    'brush': 'Brush Script MT, cursive',
+                    'lucida': 'Lucida Handwriting, cursive',
+                    'gujarati': 'Shruti, Noto Sans Gujarati, Arial Unicode MS, sans-serif'
+                };
+                return fontMap[font] || 'Arial, sans-serif';
+            }
+            
+            function drawPreview() {
+                if (!templateImage || !templateCanvas) return;
+                
+                const ctx = templateCanvas.getContext('2d');
+                const maxWidth = 800;
+                let displayWidth = templateImage.width;
+                let displayHeight = templateImage.height;
+                
+                if (displayWidth > maxWidth) {
+                    const scale = maxWidth / displayWidth;
+                    displayWidth = maxWidth;
+                    displayHeight = displayHeight * scale;
+                }
+                
+                templateCanvas.width = displayWidth;
+                templateCanvas.height = displayHeight;
+                
+                ctx.clearRect(0, 0, displayWidth, displayHeight);
+                ctx.drawImage(templateImage, 0, 0, displayWidth, displayHeight);
+                
+                const scaleX = displayWidth / templateImage.width;
+                const scaleY = displayHeight / templateImage.height;
+                
+                const previewName = getPreviewName();
+                const fontSize = parseInt(fontSizeInput.value) || 48;
+                const yPos = parseInt(yPositionInput.value) || 300;
+                const textColor = textColorInput.value || '#000000';
+                const font = fontSelect.value || 'arial';
+                
+                const centerX = displayWidth / 2;
+                const scaledY = yPos * scaleY;
+                const scaledFontSize = fontSize * Math.min(scaleX, scaleY);
+                
+                ctx.fillStyle = textColor;
+                ctx.font = scaledFontSize + 'px ' + getCanvasFontFamily(font);
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                ctx.fillText(previewName, centerX, scaledY);
+                
+                const previewInfo = document.getElementById('previewInfo');
+                if (previewInfo) {
+                    previewInfo.textContent = `Preview: Y=${yPos}px (scaled: ${Math.round(scaledY)}px), Font: ${fontSize}px, Name: "${previewName}"`;
+                }
+            }
+            
+            if (templateInput && templateCanvas && previewSection) {
+                templateInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        if (!file.type.match('image/png') && !file.name.toLowerCase().endsWith('.png')) {
+                            alert('Please select a PNG image file');
+                            this.value = '';
+                            previewSection.classList.remove('active');
+                            return;
+                        }
+                        
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            templateImage = new Image();
+                            templateImage.onload = function() {
+                                previewSection.classList.add('active');
+                                drawPreview();
+                            };
+                            templateImage.src = event.target.result;
+                        };
+                        reader.onerror = function() {
+                            alert('Error reading file');
+                            previewSection.classList.remove('active');
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        previewSection.classList.remove('active');
+                    }
+                });
+            }
+            
+            const updatePreview = function() {
+                if (templateImage) {
+                    drawPreview();
+                }
+            };
+            
+            if (fontSelect) fontSelect.addEventListener('change', updatePreview);
+            if (fontSizeInput) fontSizeInput.addEventListener('input', updatePreview);
+            if (yPositionInput) yPositionInput.addEventListener('input', updatePreview);
+            if (textColorInput) textColorInput.addEventListener('input', updatePreview);
+            if (namesTextarea) namesTextarea.addEventListener('input', updatePreview);
+            
+            if (fontSelect && fontPreview) {
+                function updateFontPreview() {
+                    const font = fontSelect.value;
+                    let fontFamily = 'Arial, sans-serif';
+                    
+                    switch(font) {
+                        case 'arial': fontFamily = 'Arial, sans-serif'; break;
+                        case 'times': fontFamily = '"Times New Roman", serif'; break;
+                        case 'cursive': fontFamily = 'cursive'; break;
+                        case 'mongolia': fontFamily = '"Brush Script MT", "Lucida Handwriting", cursive'; break;
+                        case 'brush': fontFamily = '"Brush Script MT", cursive'; break;
+                        case 'lucida': fontFamily = '"Lucida Handwriting", cursive'; break;
+                        case 'gujarati': fontFamily = 'Shruti, "Noto Sans Gujarati", "Arial Unicode MS", sans-serif'; break;
+                    }
+                    
+                    fontPreview.style.fontFamily = fontFamily;
+                }
+                
+                fontSelect.addEventListener('change', updateFontPreview);
+                updateFontPreview();
+            }
+            
+            const certificateForm = document.getElementById('certificateForm');
+            if (certificateForm) {
+                certificateForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const generateBtn = document.getElementById('generateBtn');
+                    const loading = document.getElementById('loading');
+                    
+                    generateBtn.disabled = true;
+                    loading.classList.add('active');
+                    
+                    fetch('/process', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        loading.classList.remove('active');
+                        generateBtn.disabled = false;
+                        
+                        if (data.success) {
+                            window.location.href = '/results?session=' + data.session_id;
+                        } else {
+                            alert('Error: ' + (data.message || 'Failed to generate certificates'));
+                        }
+                    })
+                    .catch(error => {
+                        loading.classList.remove('active');
+                        generateBtn.disabled = false;
+                        alert('Error: ' + error.message);
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+
