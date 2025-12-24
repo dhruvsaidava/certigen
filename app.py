@@ -68,7 +68,9 @@ def check_font_supports_gujarati(font_path):
 
 
 def find_gujarati_font(font_size):
-    """Find a font that supports Gujarati characters"""
+    """Find a font that supports Gujarati characters - cross-platform"""
+    import platform
+    
     # Priority list of Gujarati font names (case-insensitive search)
     gujarati_font_names = [
         'shruti', 'shvruti', 'noto', 'gujarati', 'gujrati',
@@ -76,36 +78,61 @@ def find_gujarati_font(font_size):
         'prabhki', 'rekha', 'kalapi'
     ]
     
-    # Search paths (including user fonts directory)
-    search_paths = [
-        'C:/Windows/Fonts/',
-        os.path.expanduser('~/AppData/Local/Microsoft/Windows/Fonts/'),  # User fonts
-        '/System/Library/Fonts/',
-        '/System/Library/Fonts/Supplemental/',
-        '/usr/share/fonts/',
-        '/usr/share/fonts/truetype/',
-    ]
+    # Detect platform and prioritize Linux paths for Vercel
+    system = platform.system().lower()
+    if 'linux' in system:
+        # Linux paths (prioritized for Vercel)
+        search_paths = [
+            '/usr/share/fonts/truetype/noto/',
+            '/usr/share/fonts/truetype/dejavu/',
+            '/usr/share/fonts/truetype/liberation/',
+            '/usr/share/fonts/truetype/lohit-gujarati/',
+            '/usr/share/fonts/truetype/',
+            '/usr/share/fonts/opentype/noto/',
+            '/usr/share/fonts/',
+            '/usr/local/share/fonts/',
+            '/tmp/fonts/',
+        ]
+    elif 'darwin' in system or 'mac' in system:
+        search_paths = [
+            '/System/Library/Fonts/Supplemental/',
+            '/System/Library/Fonts/',
+            '/Library/Fonts/',
+            os.path.expanduser('~/Library/Fonts/'),
+        ]
+    else:  # Windows
+        search_paths = [
+            'C:/Windows/Fonts/',
+            os.path.expanduser('~/AppData/Local/Microsoft/Windows/Fonts/'),
+        ]
     
-    # First, try exact matches with common names (prioritize Regular variant)
-    user_fonts_dir = os.path.expanduser('~/AppData/Local/Microsoft/Windows/Fonts/')
-    exact_matches = [
-        # User fonts directory (where fonts are usually installed)
-        os.path.join(user_fonts_dir, 'NotoSansGujarati-Regular.ttf'),
-        os.path.join(user_fonts_dir, 'NotoSansGujarati-Bold.ttf'),
-        os.path.join(user_fonts_dir, 'NotoSansGujarati-Medium.ttf'),
-        # System fonts directory
-        'C:/Windows/Fonts/NotoSansGujarati-Regular.ttf',
-        'C:/Windows/Fonts/NotoSansGujarati-Bold.ttf',
-        'C:/Windows/Fonts/NotoSansGujarati-Medium.ttf',
-        'C:/Windows/Fonts/NotoSansGujarati-Regular.otf',
-        'C:/Windows/Fonts/NotoSansGujarati-Bold.otf',
-        'C:/Windows/Fonts/shvruti.ttf',
-        'C:/Windows/Fonts/SHRUTI.TTF',
-        'C:/Windows/Fonts/shruti.ttf',
-        '/usr/share/fonts/truetype/noto/NotoSansGujarati-Regular.ttf',
-        '/usr/share/fonts/truetype/lohit-gujarati/Lohit-Gujarati.ttf',
-        '/System/Library/Fonts/Supplemental/NotoSansGujarati-Regular.ttf',
-    ]
+    # First, try exact matches with common names (prioritize Linux paths)
+    if 'linux' in system:
+        exact_matches = [
+            '/usr/share/fonts/truetype/noto/NotoSansGujarati-Regular.ttf',
+            '/usr/share/fonts/truetype/noto/NotoSansGujarati-Bold.ttf',
+            '/usr/share/fonts/truetype/noto/NotoSansGujarati-Medium.ttf',
+            '/usr/share/fonts/opentype/noto/NotoSansGujarati-Regular.otf',
+            '/usr/share/fonts/truetype/lohit-gujarati/Lohit-Gujarati.ttf',
+            '/usr/share/fonts/truetype/lohit-gujarati/LohitGujarati-Regular.ttf',
+        ]
+    elif 'darwin' in system or 'mac' in system:
+        exact_matches = [
+            '/System/Library/Fonts/Supplemental/NotoSansGujarati-Regular.ttf',
+            '/System/Library/Fonts/Supplemental/NotoSansGujarati-Bold.ttf',
+            '/Library/Fonts/NotoSansGujarati-Regular.ttf',
+        ]
+    else:  # Windows
+        user_fonts_dir = os.path.expanduser('~/AppData/Local/Microsoft/Windows/Fonts/')
+        exact_matches = [
+            os.path.join(user_fonts_dir, 'NotoSansGujarati-Regular.ttf'),
+            os.path.join(user_fonts_dir, 'NotoSansGujarati-Bold.ttf'),
+            'C:/Windows/Fonts/NotoSansGujarati-Regular.ttf',
+            'C:/Windows/Fonts/NotoSansGujarati-Bold.ttf',
+            'C:/Windows/Fonts/shvruti.ttf',
+            'C:/Windows/Fonts/SHRUTI.TTF',
+            'C:/Windows/Fonts/shruti.ttf',
+        ]
     
     for font_path in exact_matches:
         if os.path.exists(font_path):
@@ -161,13 +188,24 @@ def find_gujarati_font(font_size):
                     except:
                         continue
     
-    # Last resort: try Arial Unicode MS (if available, supports many scripts)
-    arial_unicode_paths = [
-        'C:/Windows/Fonts/ARIALUNI.TTF',
-        'C:/Windows/Fonts/arialuni.ttf',
-        'C:/Windows/Fonts/Arial Unicode MS.ttf',
-    ]
-    for font_path in arial_unicode_paths:
+    # Last resort: try Unicode fonts (if available, supports many scripts)
+    if 'linux' in system:
+        unicode_font_paths = [
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+            '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+        ]
+    elif 'darwin' in system or 'mac' in system:
+        unicode_font_paths = [
+            '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',
+        ]
+    else:  # Windows
+        unicode_font_paths = [
+            'C:/Windows/Fonts/ARIALUNI.TTF',
+            'C:/Windows/Fonts/arialuni.ttf',
+            'C:/Windows/Fonts/Arial Unicode MS.ttf',
+        ]
+    
+    for font_path in unicode_font_paths:
         if os.path.exists(font_path):
             try:
                 if check_font_supports_gujarati(font_path):
@@ -179,66 +217,70 @@ def find_gujarati_font(font_size):
 
 
 def get_gujarati_font_path():
-    """Get the path to the Gujarati font file"""
-    user_fonts_dir = os.path.expanduser('~/AppData/Local/Microsoft/Windows/Fonts/')
-    exact_matches = [
-        os.path.join(user_fonts_dir, 'NotoSansGujarati-Regular.ttf'),
-        'C:/Windows/Fonts/NotoSansGujarati-Regular.ttf',
-        'C:/Windows/Fonts/shvruti.ttf',
-        'C:/Windows/Fonts/SHRUTI.TTF',
-    ]
+    """Get the path to the Gujarati font file - cross-platform"""
+    import platform
+    
+    system = platform.system().lower()
+    
+    if 'linux' in system:
+        exact_matches = [
+            '/usr/share/fonts/truetype/noto/NotoSansGujarati-Regular.ttf',
+            '/usr/share/fonts/truetype/noto/NotoSansGujarati-Bold.ttf',
+            '/usr/share/fonts/opentype/noto/NotoSansGujarati-Regular.otf',
+            '/usr/share/fonts/truetype/lohit-gujarati/Lohit-Gujarati.ttf',
+        ]
+    elif 'darwin' in system or 'mac' in system:
+        exact_matches = [
+            '/System/Library/Fonts/Supplemental/NotoSansGujarati-Regular.ttf',
+            '/Library/Fonts/NotoSansGujarati-Regular.ttf',
+        ]
+    else:  # Windows
+        user_fonts_dir = os.path.expanduser('~/AppData/Local/Microsoft/Windows/Fonts/')
+        exact_matches = [
+            os.path.join(user_fonts_dir, 'NotoSansGujarati-Regular.ttf'),
+            'C:/Windows/Fonts/NotoSansGujarati-Regular.ttf',
+            'C:/Windows/Fonts/shvruti.ttf',
+            'C:/Windows/Fonts/SHRUTI.TTF',
+        ]
     
     for font_path in exact_matches:
         if os.path.exists(font_path):
             return font_path
     
-    # Search in user fonts directory
-    if os.path.exists(user_fonts_dir):
-        for font_file in os.listdir(user_fonts_dir):
-            if 'noto' in font_file.lower() and 'gujarati' in font_file.lower() and 'regular' in font_file.lower():
-                font_path = os.path.join(user_fonts_dir, font_file)
-                if font_path.endswith('.ttf') or font_path.endswith('.otf'):
-                    return font_path
+    # Search in common font directories
+    if 'linux' in system:
+        search_dirs = [
+            '/usr/share/fonts/truetype/noto/',
+            '/usr/share/fonts/truetype/lohit-gujarati/',
+        ]
+    elif 'darwin' in system or 'mac' in system:
+        search_dirs = [
+            '/System/Library/Fonts/Supplemental/',
+            '/Library/Fonts/',
+        ]
+    else:  # Windows
+        search_dirs = [
+            os.path.expanduser('~/AppData/Local/Microsoft/Windows/Fonts/'),
+            'C:/Windows/Fonts/',
+        ]
     
-    return None
-
-
-def get_gujarati_font_path():
-    """Get the path to the Gujarati font file"""
-    user_fonts_dir = os.path.expanduser('~/AppData/Local/Microsoft/Windows/Fonts/')
-    exact_matches = [
-        os.path.join(user_fonts_dir, 'NotoSansGujarati-Regular.ttf'),
-        'C:/Windows/Fonts/NotoSansGujarati-Regular.ttf',
-        'C:/Windows/Fonts/shvruti.ttf',
-        'C:/Windows/Fonts/SHRUTI.TTF',
-    ]
-    
-    for font_path in exact_matches:
-        if os.path.exists(font_path):
-            return font_path
-    
-    # Search in user fonts directory
-    if os.path.exists(user_fonts_dir):
-        for font_file in os.listdir(user_fonts_dir):
-            if 'noto' in font_file.lower() and 'gujarati' in font_file.lower() and 'regular' in font_file.lower():
-                font_path = os.path.join(user_fonts_dir, font_file)
-                if font_path.endswith('.ttf') or font_path.endswith('.otf'):
-                    return font_path
+    for search_dir in search_dirs:
+        if os.path.exists(search_dir):
+            try:
+                for font_file in os.listdir(search_dir):
+                    if 'noto' in font_file.lower() and 'gujarati' in font_file.lower() and 'regular' in font_file.lower():
+                        font_path = os.path.join(search_dir, font_file)
+                        if font_path.endswith('.ttf') or font_path.endswith('.otf'):
+                            return font_path
+            except:
+                continue
     
     return None
 
 
 def get_font_path(font_name, font_size):
-    """Get font path based on selection"""
-    font_map = {
-        'arial': 'arial.ttf',
-        'times': 'times.ttf',
-        'cursive': None,  # Will use system cursive
-        'mongolia': None,  # Will use system cursive
-        'brush': None,  # Will use system cursive
-        'lucida': None,  # Will use system cursive
-        'gujarati': None,  # Will use Gujarati font
-    }
+    """Get font path based on selection - cross-platform support"""
+    import platform
     
     # For Gujarati font, use specialized search
     if font_name == 'gujarati':
@@ -252,47 +294,129 @@ def get_font_path(font_name, font_size):
             return gujarati_font
         # If no Gujarati font found, warn but continue with fallback
         print("Warning: No Gujarati-supporting font found. Using fallback font.")
-        print("Please install a Gujarati font like Shruti or Noto Sans Gujarati.")
-        font_file = 'arial.ttf'
+        font_name = 'arial'  # Fallback to arial
+    
+    # Font name mappings for different platforms
+    font_map = {
+        'arial': {
+            'windows': ['arial.ttf', 'arial.ttf', 'ARIAL.TTF'],
+            'linux': ['DejaVuSans.ttf', 'LiberationSans-Regular.ttf', 'arial.ttf'],
+            'macos': ['Arial.ttf', 'Helvetica.ttc'],
+            'generic': ['Arial', 'sans-serif']
+        },
+        'times': {
+            'windows': ['times.ttf', 'times.ttf', 'TIMES.TTF'],
+            'linux': ['DejaVuSerif.ttf', 'LiberationSerif-Regular.ttf', 'times.ttf'],
+            'macos': ['Times.ttf', 'TimesNewRoman.ttf'],
+            'generic': ['Times New Roman', 'serif']
+        },
+        'cursive': {
+            'windows': ['BRUSHSCI.TTF', 'BRUSHSC.ttf', 'SCRIPTBL.TTF', 'LHANDW.TTF'],
+            'linux': ['DejaVuSans.ttf'],  # Fallback
+            'macos': ['Brush Script.ttf'],
+            'generic': ['cursive']
+        },
+        'mongolia': {
+            'windows': ['BRUSHSCI.TTF', 'BRUSHSC.ttf'],
+            'linux': ['DejaVuSans.ttf'],
+            'macos': ['Brush Script.ttf'],
+            'generic': ['cursive']
+        },
+        'brush': {
+            'windows': ['BRUSHSCI.TTF', 'BRUSHSC.ttf'],
+            'linux': ['DejaVuSans.ttf'],
+            'macos': ['Brush Script.ttf'],
+            'generic': ['cursive']
+        },
+        'lucida': {
+            'windows': ['LHANDW.TTF', 'lhandw.ttf'],
+            'linux': ['DejaVuSans.ttf'],
+            'macos': ['Lucida Handwriting.ttf'],
+            'generic': ['cursive']
+        }
+    }
+    
+    # Detect platform
+    system = platform.system().lower()
+    if 'linux' in system:
+        platform_key = 'linux'
+    elif 'darwin' in system or 'mac' in system:
+        platform_key = 'macos'
+    elif 'win' in system:
+        platform_key = 'windows'
     else:
-        font_file = font_map.get(font_name, 'arial.ttf')
+        platform_key = 'linux'  # Default to Linux for serverless
     
-    # Try to find system fonts
-    system_font_paths = [
-        'C:/Windows/Fonts/',
-        '/System/Library/Fonts/',
-        '/usr/share/fonts/',
-    ]
+    # Get font candidates for this platform
+    font_config = font_map.get(font_name, font_map['arial'])
+    font_candidates = font_config.get(platform_key, font_config.get('linux', []))
     
-    if font_file:
+    # System font paths (prioritize Linux for Vercel)
+    if platform_key == 'linux':
+        system_font_paths = [
+            '/usr/share/fonts/truetype/',
+            '/usr/share/fonts/truetype/dejavu/',
+            '/usr/share/fonts/truetype/liberation/',
+            '/usr/share/fonts/truetype/noto/',
+            '/usr/share/fonts/',
+            '/usr/local/share/fonts/',
+            '/tmp/fonts/',  # For bundled fonts
+        ]
+    elif platform_key == 'macos':
+        system_font_paths = [
+            '/System/Library/Fonts/',
+            '/System/Library/Fonts/Supplemental/',
+            '/Library/Fonts/',
+            '~/Library/Fonts/',
+        ]
+    else:  # Windows
+        system_font_paths = [
+            'C:/Windows/Fonts/',
+            os.path.expanduser('~/AppData/Local/Microsoft/Windows/Fonts/'),
+        ]
+    
+    # Try to find font files
+    for font_file in font_candidates:
+        # Try direct paths first
         for base_path in system_font_paths:
-            if os.path.exists(base_path):
-                font_path = os.path.join(base_path, font_file)
+            expanded_path = os.path.expanduser(base_path) if '~' in base_path else base_path
+            if os.path.exists(expanded_path):
+                # Try exact match
+                font_path = os.path.join(expanded_path, font_file)
                 if os.path.exists(font_path):
                     try:
                         return ImageFont.truetype(font_path, font_size)
-                    except:
+                    except Exception as e:
                         continue
+                
+                # Try case-insensitive search (for Linux)
+                if platform_key == 'linux':
+                    try:
+                        for f in os.listdir(expanded_path):
+                            if f.lower() == font_file.lower() and (f.endswith('.ttf') or f.endswith('.otf')):
+                                font_path = os.path.join(expanded_path, f)
+                                try:
+                                    return ImageFont.truetype(font_path, font_size)
+                                except:
+                                    continue
+                    except:
+                        pass
     
-    # For cursive/handwriting fonts, try common system fonts
-    if font_name in ['cursive', 'mongolia', 'brush', 'lucida']:
-        cursive_fonts = [
-            'C:/Windows/Fonts/BRUSHSCI.TTF',
-            'C:/Windows/Fonts/BRUSHSC.ttf',
-            'C:/Windows/Fonts/SCRIPTBL.TTF',
-            'C:/Windows/Fonts/LHANDW.TTF',
-        ]
-        for font_path in cursive_fonts:
-            if os.path.exists(font_path):
-                try:
-                    return ImageFont.truetype(font_path, font_size)
-                except:
-                    continue
-    
-    # Fallback to default font
+    # Try PIL's default font loading (works cross-platform)
     try:
-        return ImageFont.truetype("arial.ttf", font_size)
+        # Try to load by name (PIL can sometimes find system fonts)
+        if font_name == 'arial':
+            return ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
+        elif font_name == 'times':
+            return ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf", font_size)
     except:
+        pass
+    
+    # Final fallback - use PIL's default font
+    try:
+        return ImageFont.load_default()
+    except:
+        # Last resort - create a basic font
         return ImageFont.load_default()
 
 
