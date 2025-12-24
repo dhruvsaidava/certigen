@@ -23,8 +23,16 @@ except ImportError:
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
-app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['OUTPUT_FOLDER'] = 'output'
+
+# Use /tmp for file storage on Vercel (serverless), otherwise use local directories
+if os.environ.get('VERCEL') or os.path.exists('/tmp'):
+    # Running on Vercel or similar serverless environment
+    app.config['UPLOAD_FOLDER'] = '/tmp/uploads'
+    app.config['OUTPUT_FOLDER'] = '/tmp/output'
+else:
+    # Running locally
+    app.config['UPLOAD_FOLDER'] = 'uploads'
+    app.config['OUTPUT_FOLDER'] = 'output'
 
 # Create necessary directories
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
